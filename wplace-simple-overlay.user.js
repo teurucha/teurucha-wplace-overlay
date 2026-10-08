@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         teurucha-wplace-overlay
 // @namespace    teurucha-woverlay
-// @version      0.5
+// @version      0.6
 // @description  Turn any picture into Wplace colors, fit it to an area, overlay it, and see which color goes where
 // @license      MIT
 // @homepageURL  https://github.com/teurucha/teurucha-wplace-overlay
@@ -18,7 +18,7 @@
     'Medium Gray','Dark Red','Light Red','Dark Orange','Light Tan','Dark Goldenrod','Goldenrod','Light Goldenrod','Dark Olive','Olive','Light Olive','Dark Cyan','Light Cyan','Light Blue','Dark Indigo','Dark Slate Blue','Slate Blue','Light Slate Blue','Light Brown','Dark Beige','Light Beige','Dark Peach','Peach','Light Peach','Dark Tan','Tan','Dark Slate','Slate','Light Slate','Dark Stone','Stone','Light Stone'];
   const PAL = FREE.concat(PREM);
 
-  let S = { img: null, name: '', tx: 0, ty: 0, px: 0, py: 0, aw: 0, ah: 0, stretch: false, op: 0.6, focus: null, dither: false, premium: false, x: 12, y: 70, min: false };
+  let S = { img: null, name: '', tx: 0, ty: 0, px: 0, py: 0, aw: 0, ah: 0, stretch: false, op: 0.6, focus: null, dither: false, premium: false, hidden: false, x: 12, y: 70, min: false };
   try { S = Object.assign(S, JSON.parse(localStorage.getItem(KEY) || '{}')); } catch (e) {}
 
   // Saved settings come from localStorage, so treat them as untrusted and validate every field.
@@ -26,7 +26,7 @@
   ['tx', 'ty', 'px', 'py', 'aw', 'ah'].forEach(k => (S[k] = Math.min(2000000, Math.max(0, Math.floor(num(S[k], 0))))));
   S.op = Math.min(1, Math.max(0.1, num(S.op, 0.6)));
   S.x = num(S.x, 12); S.y = num(S.y, 70);
-  S.stretch = !!S.stretch; S.min = !!S.min; S.dither = !!S.dither; S.premium = !!S.premium;
+  S.stretch = !!S.stretch; S.min = !!S.min; S.dither = !!S.dither; S.premium = !!S.premium; S.hidden = !!S.hidden;
   S.name = typeof S.name === 'string' ? S.name.slice(0, 100) : '';
   S.focus = Number.isInteger(S.focus) && S.focus >= 0 && S.focus < PAL.length ? S.focus : null;
   if (typeof S.img !== 'string' || !/^data:image\/png;base64,[A-Za-z0-9+\/=]+$/.test(S.img)) S.img = null;
@@ -77,7 +77,7 @@
         const q = new URL(url, location.href).searchParams;
         if (q.has('x') && q.has('y')) { capturing = false; onPick(+pm[1], +pm[2], +q.get('x'), +q.get('y')); }
       }
-      const m = bitmap && url.match(/\/tiles\/(\d+)\/(\d+)\.png/);
+      const m = bitmap && !S.hidden && url.match(/\/tiles\/(\d+)\/(\d+)\.png/);
       if (!m) return res;
       const tx = +m[1], ty = +m[2];
       const tile = await createImageBitmap(await res.clone().blob());
@@ -191,7 +191,8 @@
           <button class="btn ghost" id="so_all" hidden>Show everything again</button>
         </div>
         <div class="sec"><div class="lb">See-through level</div>
-          <div class="rg"><input id="so_o" type="range" min="0.1" max="1" step="0.1"><span id="so_ov">60%</span></div>
+          <div class="rg"><input id="so_o" type="range" min="0.1" max="1" step="0.1"><span id="so_ov">60%</span>
+            <label class="ck" style="white-space:nowrap"><input type="checkbox" id="so_hide"> Hide</label></div>
         </div>
         <div class="sec">
           <button class="btn go" id="so_a">Apply</button>
@@ -283,6 +284,8 @@
     $('so_o').value = S.op; $('so_ov').textContent = Math.round(S.op * 100) + '%';
     $('so_stretch').checked = !!S.stretch;
     $('so_o').oninput = () => ($('so_ov').textContent = Math.round($('so_o').value * 100) + '%');
+    $('so_hide').checked = S.hidden;
+    $('so_hide').onchange = () => { S.hidden = $('so_hide').checked; save(); location.reload(); };
     $('so_w').oninput = info;
     $('so_prem').checked = S.premium; $('so_dith').checked = S.dither;
     $('so_prem').onchange = () => { S.premium = $('so_prem').checked; save(); status('Choose your picture again to use this.'); };
