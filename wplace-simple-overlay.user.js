@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         teurucha-wplace-overlay
 // @namespace    teurucha-woverlay
-// @version      0.4
+// @version      0.5
 // @description  Turn any picture into Wplace colors, fit it to an area, overlay it, and see which color goes where
 // @license      MIT
 // @homepageURL  https://github.com/teurucha/teurucha-wplace-overlay
@@ -146,6 +146,7 @@
   #so .btn.act{background:#c9772b}
   #so input[type=number]{width:100%;background:#12141b;border:1px solid rgba(255,255,255,.12);border-radius:7px;color:#fff;padding:6px 7px;font:inherit}
   #so .grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+  #so .wl{display:flex;flex-direction:column;gap:2px;font-size:11px;color:#8b92a8}
   #so .grid label{display:flex;flex-direction:column;gap:2px;font-size:11px;color:#8b92a8}
   #so .rg{display:flex;align-items:center;gap:8px}
   #so input[type=range]{flex:1;accent-color:#4093e4}
@@ -179,6 +180,8 @@
         </div>
         <div class="sec"><div class="lb">2. Where to put it</div>
           <button class="btn pri" id="so_ar">Pick an area to place picture</button>
+          <button class="btn" id="so_tl">Or just pick the top-left corner</button>
+          <label class="wl">Picture width in pixels (optional)<input id="so_w" type="number" min="1" placeholder="its own size"></label>
           <div class="hint" id="so_area"></div>
           <label class="ck"><input type="checkbox" id="so_stretch"> Stretch picture to fill the area exactly</label>
         </div>
@@ -197,7 +200,6 @@
         </div>
         <details><summary>Manual position &amp; size</summary>
           <div class="grid">
-            <label>Width (px)<input id="so_w" type="number" min="1" placeholder="auto"></label><span></span>
             <label>Tile X<input id="so_tx" type="number"></label><label>Tile Y<input id="so_ty" type="number"></label>
             <label>Pixel X<input id="so_px" type="number"></label><label>Pixel Y<input id="so_py" type="number"></label>
           </div>
@@ -248,7 +250,7 @@
     };
     const info = () => {
       const im = src();
-      let t = hasArea() ? 'Area: ' + S.aw + ' × ' + S.ah + ' pixels' : 'No area picked yet.';
+      let t = hasArea() ? 'Area: ' + S.aw + ' × ' + S.ah + ' pixels' : 'Picture keeps its own size (or the width above).';
       if (im) { const z = sizeFor(im); t += ' → picture ' + z.w + ' × ' + z.h; }
       $('so_area').textContent = t;
     };
@@ -303,7 +305,7 @@
       const f = $('so_f').files[0]; if (!f) return;
       const im = new Image();
       im.onload = () => {
-        chosen = im; chosenName = f.name; $('so_w').value = '';
+        chosen = im; chosenName = f.name;
         $('so_fn').textContent = f.name; info();
         status(hasArea() ? 'Press Apply to fit it to your area.' : 'Now pick an area on the map, or press Apply.');
       };
@@ -377,6 +379,23 @@
           if (src()) { status('Fitting your picture…'); apply(); }
           else { save(); status('Area saved. Now choose a picture and press Apply.'); }
         };
+      };
+    };
+
+    // corner only: click the top-left pixel, picture keeps its own size (good for group art)
+    $('so_tl').onclick = () => {
+      $('so_tl').classList.add('act');
+      $('so_tl').textContent = 'Click the top-left pixel…';
+      status('Click the pixel where the top-left of the picture goes.');
+      capturing = true;
+      onPick = (tx, ty, px, py) => {
+        S.aw = 0; S.ah = 0;
+        $('so_tx').value = tx; $('so_ty').value = ty; $('so_px').value = px; $('so_py').value = py;
+        $('so_tl').textContent = 'Pick a different corner'; $('so_tl').classList.remove('act');
+        $('so_ar').textContent = 'Pick an area to place picture'; $('so_ar').classList.remove('act');
+        info();
+        if (src()) { status('Placing your picture…'); apply(); }
+        else { save(); status('Corner saved. Now choose a picture and press Apply.'); }
       };
     };
 
