@@ -1,11 +1,11 @@
 // ==UserScript==
-// @name         Wplace Simple Overlay
-// @namespace    simple-wplace-overlay
+// @name         teurucha-wplace-overlay
+// @namespace    teurucha-woverlay
 // @version      0.4
 // @description  Turn any picture into Wplace colors, fit it to an area, overlay it, and see which color goes where
 // @license      MIT
-// @homepageURL  https://github.com/YOUR-USERNAME/YOUR-REPO
-// @supportURL   https://github.com/YOUR-USERNAME/YOUR-REPO/issues
+// @homepageURL  https://github.com/teurucha/teurucha-wplace-overlay
+// @supportURL   https://github.com/teurucha/teurucha-wplace-overlay/issues
 // @match        https://wplace.live/*
 // @run-at       document-start
 // @grant        none
